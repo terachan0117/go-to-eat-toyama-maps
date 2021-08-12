@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="theme-color" content="#f4a000">
+    <link rel="icon" href="favicon.ico">
+    <title>GoToEat TOYAMA 加盟店マップ</title>
+    <meta name="description" content="GoToEatキャンペーンTOYAMAの加盟店一覧です。" />
+
+    <meta property="og:title" content="GoToEat TOYAMA 加盟店マップ" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://terachan0117.github.io/go-to-eat-toyama-maps/" />
+    <meta property="og:image" content="https://terachan0117.github.io/go-to-eat-toyama-maps/ogp.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+        crossorigin="" />
+    <link rel="stylesheet" href="lib/L.Control.Locate.min.css" />
+    <link rel="stylesheet" href="lib/leaflet-sidebar.min.css" />
+    <style>
+        body {
+            margin: 0;
+            font-family: sans-serif;
+        }
+
+        #map {
+            height: 100vh;
+        }
+
+        .leaflet-popup-content {
+            font-size: 14px;
+            max-width: 75vw;
+        }
+
+        .leaflet-popup-content a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .leaflet-popup-content h1 {
+            margin-bottom: 0;
+        }
+
+        .leaflet-popup-content table {
+            margin: 10px 0;
+        }
+
+        .leaflet-popup-content td {
+            padding: 5px;
+        }
+
+        .leaflet-popup-content .actions {
+            border-top: 1px solid #cccccc;
+        }
+
+        .location,
+        .location-loading {
+            background-image: url('img/location-loading.svg');
+            background-repeat: no-repeat;
+            background-position: center;
+            display: block;
+            width: 30px;
+            height: 30px;
+        }
+
+        .active .location {
+            background-image: url('img/location.svg');
+        }
+
+        @media only screen and (max-width: 767px) {
+            .sidebar {
+                height: 100vh;
+            }
+        }
+
+        .sidebar.leaflet-touch {
+            border: 0px none;
+        }
+
+        #sidebar.collapsed .sidebar-tabs,
+        #sidebar.collapsed .sidebar-tabs>li:hover,
+        #sidebar.collapsed .sidebar-tabs>ul>li:hover {
+            background-color: transparent;
+        }
+
+        .sidebar-tabs>li.active,
+        .sidebar-tabs>ul>li.active,
+        .sidebar-header {
+            color: #000;
+            background-color: #f4a000;
+        }
+
+        .sidebar-tabs svg,
+        .sidebar-content svg {
+            margin-top: 8px;
+        }
+
+        .sidebar-header {
+            height: auto;
+        }
+
+        .sidebar-header>span {
+            display: inline-block;
+        }
+
+        .sidebar-content {
+            color: #333;
+        }
+
+        .sidebar-content a[href] {
+            color: #0078A8;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="sidebar" class="sidebar collapsed">
+        <div class="sidebar-tabs">
+            <ul role="tablist">
+                <li role="tab">
+                    <a href="#home">
+                        <svg role="img" aria-label="メニューを開く" xmlns="http://www.w3.org/2000/svg" height="24px"
+                            viewBox="0 0 24 24" width="24px" fill="#000000">
+                            <path d="M0 0h24v24H0V0z" fill="none" />
+                            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" /></svg>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="sidebar-content">
+            <div class="sidebar-pane" id="home">
+                <h1 class="sidebar-header">
+                    <span>GoToEat TOYAMA</span> <span>加盟店マップ</span>
+                    <span class="sidebar-close">
+                        <svg role="img" aria-label="メニューを閉じる" xmlns="http://www.w3.org/2000/svg" height="24px"
+                            viewBox="0 0 24 24" width="24px" fill="#000000">
+                            <path d="M0 0h24v24H0V0z" fill="none" />
+                            <path
+                                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
+                        </svg>
+                    </span>
+                </h1>
+                <p>店舗総数 <span id="total">-</span><br>最終更新 <span id="date">-</span><br>※
+                    適宜最新の情報に更新しておりますが、修正がタイムリーに反映されていない場合があります。</p>
+                <h2>当サイトについて</h2>
+                <p>当サイトは <a href="https://www.toyamagotoeat.jp/" target="_blank" rel="noopener">Go To Eat キャンペーン TOYAMA
+                        →</a> の加盟店一覧をマップで提供するために、寺田 一世（以下、運営者とする）が開設したものです。</p>
+                <p>Go To Eat キャンペーン TOYAMA の加盟店について、必要な方へ必要な情報をわかりやすく届け、県民生活・経済活動の確保を図ることを目的としています。</p>
+                <p>※ 当サイトは 富山県Go To Eatキャンペーン事務局 および 富山県Go To Eatキャンペーン取扱加盟店 の公式アプリ又は公式サービスとして公認、公開、頒布等されているものではありません。
+                </p>
+                <p>※ 当サイトに掲載されている店舗の位置情報は、数メートル単位での精密な位置を表現しているものではありません。また、同じ住所に複数の店舗が存在する場合は、複数の店舗が一か所に重なって表示されることがあります。
+                </p>
+                <h3>当サイトへのリンクについて</h3>
+                <p>当サイトへのリンクは自由です。</p>
+                <p>
+                    ただし、以下のいずれかに該当するか、又はそのおそれがあるリンクの設定はご遠慮ください。
+                </p>
+                <ol>
+                    <li>運営者、または他社（者）・他団体を誹謗中傷したり、信用失墜を意図する内容を含む場合。 </li>
+                    <li>上記の他、法律、条例、規則を含む法令または公序良俗に違反する行為、当サイトの運営を妨害行為するおそれのある場合。</li>
+                    <li>運営者が保有するロゴやマークなどを無断で用いてリンクを張る場合。</li>
+                </ol>
+                <p>なお、当サイトのURLは予告なく変更する場合がありますので、あらかじめご了承ください。その他リンクに関連した賠償、苦情などに関して、運営者および当サイトは何ら責任を負いませんのでご了承ください。</p>
+                <h3>データについて</h3>
+                <p>当サイトで公表しているデータは、 <a href="https://www.toyamagotoeat.jp/shop/" target="_blank" rel="noopener">取扱加盟店一覧
+                        | 【公式】 GoToEatキャンペーン TOYAM →</a> を元にしています。</p>
+                <h3>ソースコードについて</h3>
+                <p>当サイトのソースコードはMITライセンスで公開されており、誰でも自由に利用することができます。 詳しくは、 <a
+                        href="https://github.com/terachan0117/go-to-eat-toyama-maps/" target="_blank"
+                        rel="noopener">GitHubレポジトリ →</a> をご確認ください。</p>
+                <h3>免責事項</h3>
+                <p>当サイトに掲載されている情報の正確性については万全を期していますが、運営者は利用者が当サイトの情報を用いて行う一切の行為について責任を負うものではありません。</p>
+                <p>また、利用者が当サイトを利用したことにより発生した利用者の損害及び利用者が第三者に与えた損害に対して、責任を負うものではありません。</p>
+                <p>当サイトに掲載されている情報は、予告なしに変更又は削除することがあります。</p>
+                <h3>当サイトの運営について</h3>
+                <p>当サイトは <a href="https://tera-chan.com" target="_blank" rel="noopener">寺田 一世 →</a> が運用しています。</p>
+                <h3>プライバシーポリシー</h3>
+                <p>本サイトでは、個人情報の収集・利用・管理について <a href="https://tera-chan.com/policy" target="_blank"
+                        rel="noopener">運営者が定めるプライバシーポリシー →</a> に基づき、 適切に取り扱うとともに、皆様に安心して利用していただけるサイトづくりに努めていきます。</p>
+                <h3>お問い合わせ</h3>
+                <p>このサイトに関すること（サイトの使い方、サイトに対するご意見等）へのお問い合わせは、<a href="https://tera-chan.com/contact" target="_blank"
+                        rel="noopener">こちら</a>からお願いします。当サイトに掲載されている情報について、店舗への直接のお問い合わせは行わないでください。</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+        integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+        crossorigin=""></script>
+    <script src="lib/L.Control.Locate.min.js"></script>
+    <script src="lib/leaflet-sidebar.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script>
+        var map = L.map('map', {
+            preferCanvas: true,
+            zoomControl: false
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // ズームコントロールを追加
+        L.control.zoom({
+            zoomInTitle: '拡大する',
+            zoomOutTitle: '縮小する',
+            position: 'topright'
+        }).addTo(map);
+
+        // ロケーションコントロールを追加
+        L.control.locate({
+            position: 'topright',
+            icon: 'location',
+            iconLoading: 'location-loading',
+            showPopup: false,
+            strings: {
+                title: '現在地を表示する'
+            },
+            keepCurrentZoomLevel: true,
+            drawCircle: false
+        }).addTo(map);
+
+        // サイドメニューを追加
+        L.control.sidebar('sidebar').addTo(map);
+
+        $.ajax({
+            type: "GET",
+            url: "data.json",
+            cache: false,
+            success: function (data, status, xhr) {
+                var markers = L.featureGroup();
+                var date = new Date(data.date);
+                $('#date').text(date.getFullYear() + '年' + ('0' + (date.getMonth() + 1)).slice(-2) + '月' + (
+                    '0' + date.getDate()).slice(-2) + '日');
+                var data = data.data;
+                $('#total').text(data.length.toLocaleString() + '店舗');
+                for (var i = 0; i < data.length; i++) {
+                    var popup = '<h1>' + data[i]["name"] + '</h1>';
+                    popup += '<div class="border">' + data[i]["genre"] + '</div>';
+                    popup += '<table><tbody>';
+                    popup +=
+                        '<tr><td><svg role="img" aria-label="住所" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#f4a000"><path d="M0 0h24v24H0z" fill="none"/><path d="M12 12c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6-1.8C18 6.57 15.35 4 12 4s-6 2.57-6 6.2c0 2.34 1.95 5.44 6 9.14 4.05-3.7 6-6.8 6-9.14zM12 2c4.2 0 8 3.22 8 8.2 0 3.32-2.67 7.25-8 11.8-5.33-4.55-8-8.48-8-11.8C4 5.22 7.8 2 12 2z"/></svg></td><td>' +
+                        data[i]["place"] + '</td></tr>';
+                    popup +=
+                        '<tr><td><svg role="img" aria-label="営業時間" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#f4a000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg></td><td>' +
+                        data[i]["work"] + '（定休日：' + data[i]["off_day"] + '）</td></tr>';
+                    popup +=
+                        '<tr><td><svg role="img" aria-label="電話番号" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#f4a000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M6.54 5c.06.89.21 1.76.45 2.59l-1.2 1.2c-.41-1.2-.67-2.47-.76-3.79h1.51m9.86 12.02c.85.24 1.72.39 2.6.45v1.49c-1.32-.09-2.59-.35-3.8-.75l1.2-1.19M7.5 3H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.49c0-.55-.45-1-1-1-1.24 0-2.45-.2-3.57-.57-.1-.04-.21-.05-.31-.05-.26 0-.51.1-.71.29l-2.2 2.2c-2.83-1.45-5.15-3.76-6.59-6.59l2.2-2.2c.28-.28.36-.67.25-1.02C8.7 6.45 8.5 5.25 8.5 4c0-.55-.45-1-1-1z"/></svg></td><td>' +
+                        data[i]["phone"] + '</td></tr>';
+                    popup += '</tbody></table>';
+                    popup +=
+                        '<div class="actions"><p><a href="https://www.google.com/maps/dir/?api=1&destination=' +
+                        encodeURI(data[i]["place"]) +
+                        '" target="_blank" rel="noopener">現在地からの経路を見る →</a></p>';
+                    popup += '<p><a href="tel:' + data[i]["phone"] + '">このお店へ電話をかける →</a></p></div>';
+                    markers.addLayer(L.circleMarker(data[i]["coordinate"].reverse(), {
+                        'color': '#f4a000'
+                    }).bindPopup(popup));
+                }
+                markers.addTo(map);
+                map.fitBounds(markers.getBounds());
+            },
+            error: function (xhr, status, error) {
+                var err = JSON.parse(xhr.responseText);
+                var errorMsg = '[' + err.status + '] ' + err.description;
+                alert("データの読み込みに失敗しました。\n" + errorMsg);
+            }
+        });
+    </script>
+</body>
+
+</html>
